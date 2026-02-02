@@ -3,8 +3,7 @@
 namespace FruitCopyBackTest.DTO.Leaderboards
 {
     public sealed record SubmitScoreRequest(
-        [Required] Guid PlayerId, 
-        long Score
+        [Required] long Score
     );
 
     public sealed record LeaderboardEntryDto(

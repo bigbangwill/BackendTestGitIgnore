@@ -17,12 +17,18 @@ namespace FruitCopyBackTest.Controllers
         public LeaderboardsController(AppDbContext db) => _db = db;
 
         // POST /api/leaderboards/{key}/submit
+        [Authorize]
         [HttpPost("{key}/submit")]
         public async Task<ActionResult> Submit(
             [FromRoute] string key,
             [FromBody] SubmitScoreRequest req,
             CancellationToken ct)
         {
+            var playerIdStr = User.FindFirstValue("player_id");
+            if (string.IsNullOrWhiteSpace(playerIdStr) || !Guid.TryParse(playerIdStr, out var playerId))
+                return Unauthorized(new { message = "Invalid player_id in token" });
+
+
             var leaderboard = await _db.Leaderboards.FirstOrDefaultAsync(x => x.Key == key, ct);
 
             if (leaderboard is null)
@@ -33,7 +39,7 @@ namespace FruitCopyBackTest.Controllers
             }
 
             var entry = await _db.LeaderboardEntries.FirstOrDefaultAsync(
-                x => x.LeaderboardId == leaderboard.Id && x.PlayerId == req.PlayerId, ct);
+                x => x.LeaderboardId == leaderboard.Id && x.PlayerId == playerId, ct);
 
             if (entry is null)
             {
@@ -41,7 +47,7 @@ namespace FruitCopyBackTest.Controllers
                 {
                     Leaderboard = leaderboard,
                     LeaderboardId = leaderboard.Id,
-                    PlayerId = req.PlayerId,
+                    PlayerId = playerId,
                     Score = req.Score,
                     UpdatedAt = DateTimeOffset.UtcNow
                 };
@@ -111,11 +117,9 @@ namespace FruitCopyBackTest.Controllers
             [FromRoute] string key,
             CancellationToken ct)
         {
-            var playerIdStr = User.FindFirstValue("playerId");
-            if(string.IsNullOrWhiteSpace(playerIdStr) || !Guid.TryParse(playerIdStr, out var playerId))
-            {
-                return Unauthorized(new { message = "Invalid playerId in token" });
-            }
+            var playerIdStr = User.FindFirstValue("player_id");
+            if (string.IsNullOrWhiteSpace(playerIdStr) || !Guid.TryParse(playerIdStr, out var playerId))
+                return Unauthorized(new { message = "Invalid player_id in token" });
 
             var leaderboard = await _db.Leaderboards.AsNoTracking().FirstOrDefaultAsync(x => x.Key == key, ct);
 

@@ -28,14 +28,14 @@ namespace FruitCopyBackTest.Controllers
             var id = Normalize(dto.PhoneOrEmail);
 
             var rlKey = $"otp_rl:{id}";
-            //if (await _redis.StringGetAsync(rlKey) is { HasValue: true })
-            //    return Request
+            if (await _redis.StringGetAsync(rlKey) is { HasValue: true })
+                return Unauthorized(new { message = "OTP request rate limit exceeded. Try again later." });
 
             await _redis.StringSetAsync(rlKey, "1", TimeSpan.FromSeconds(30));
 
             var code = RandomOtp(6);
-            var otpKey = $"orp:{id}";
-            var hashed = HashOtp(code, _cfg["Jwt:key"]!);
+            var otpKey = $"otp:{id}";
+            var hashed = HashOtp(code, _cfg["Jwt:Key"]!);
 
             await _redis.StringSetAsync(otpKey, hashed, TimeSpan.FromMinutes(2));
 
@@ -53,7 +53,7 @@ namespace FruitCopyBackTest.Controllers
             if (!storedHash.HasValue)
                 return Unauthorized(new { message = "OTP expired or not found" });
 
-            var incomingHash = HashOtp(dto.code, _cfg["Jwt:Key"]!);
+            var incomingHash = HashOtp(dto.Code, _cfg["Jwt:Key"]!);
 
             if (!CryptographicEquals(storedHash!, incomingHash))
                 return Unauthorized(new { message = "Invalid OTP" });

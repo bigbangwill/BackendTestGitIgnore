@@ -1,9 +1,11 @@
-using FruitCopyBackTest.Data;
-using Microsoft.EntityFrameworkCore;
-using StackExchange.Redis;
+﻿using FruitCopyBackTest.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
+using StackExchange.Redis;
 using System.Text;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,7 +14,34 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+builder.Services.AddSwaggerGen(options =>
+{
+    const string schemeId = "bearer";
+
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "FruitCopyBackTest API",
+        Version = "v1"
+    });
+
+    options.AddSecurityDefinition(schemeId, new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        Description = "JWT Authorization header using the Bearer scheme."
+    });
+
+    // ✅ .NET 10 / Swashbuckle v10 way (delegate + scheme reference)
+    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecuritySchemeReference(schemeId, document)] = []
+    });
+});
+
+
+
 
 builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 
@@ -21,7 +50,9 @@ var redisConnString = builder.Configuration["Redis:ConnectionString"] ?? throw n
 
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 {
-    return ConnectionMultiplexer.Connect(redisConnString);
+    var options = ConfigurationOptions.Parse(redisConnString);
+    options.AbortOnConnectFail = false;
+    return ConnectionMultiplexer.Connect(options);
 });
 #endregion
 
