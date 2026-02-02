@@ -1,0 +1,6 @@
+@FruitCopyBackTest_HostAddress = http://localhost:5058
+
+GET {{FruitCopyBackTest_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

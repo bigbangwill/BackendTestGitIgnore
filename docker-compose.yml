@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:18
+    container_name: gamebackend-db
+    environment:
+      POSTGRES_USER: game
+      POSTGRES_PASSWORD: worldofwar
+      POSTGRES_DB: gamebackend
+    ports:
+      - "5432:5432"
+    volumes:
+      - gamebackend_pgdata:/var/lib/postgresq1/data
+
+volumes:
+  gamebackend_pgdata:
