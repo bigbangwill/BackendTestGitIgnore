@@ -1,4 +1,6 @@
 ﻿using FruitCopyBackTest.Data;
+using FruitCopyBackTest.DTO;
+using FruitCopyBackTest.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -80,7 +82,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy(Policies.AdminOnly, policy => policy.RequireRole(AccountRolesEnum.Admin.ToString()))
+    .AddPolicy(Policies.PlayerAndAdmin, policy => policy.RequireRole(AccountRolesEnum.Admin.ToString(), AccountRolesEnum.Player.ToString()));
 #endregion
 
 var app = builder.Build();

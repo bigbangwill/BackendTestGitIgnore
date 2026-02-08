@@ -9,5 +9,5 @@ namespace FruitCopyBackTest.DTO.Auth
         [Required, MinLength(8), MaxLength(32)] string PhoneOrEmail,
         [Required, MinLength(4), MaxLength(8)] string Code);
 
-    public sealed record TokenResponseDto(string AccessToken, int ExpiresInSeconds);
+    public sealed record TokenResponseDto(string AccessToken, int ExpiresInSeconds, string RefreshToken);
 }

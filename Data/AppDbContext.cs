@@ -10,6 +10,8 @@ namespace FruitCopyBackTest.Data
         public DbSet<PlayerSave> PlayerSaves => Set<PlayerSave>();
         public DbSet<Leaderboard> Leaderboards => Set<Leaderboard>();
         public DbSet<LeaderboardEntry> LeaderboardEntries => Set<LeaderboardEntry>();
+        public DbSet<Player> Player => Set<Player>();
+        public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -28,6 +30,15 @@ namespace FruitCopyBackTest.Data
                 b.HasIndex(x => new { x.LeaderboardId, x.PlayerId }).IsUnique();
                 b.HasIndex(x => new { x.LeaderboardId, x.Score, x.UpdatedAt });
                 b.HasIndex(x => x.PlayerId);
+            });
+
+            modelBuilder.Entity<RefreshToken>(e =>
+            {
+                e.HasOne(rt => rt.Player).WithMany().HasForeignKey(rt => rt.PlayerId).OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(rt => rt.ReplacedByToken).WithMany().HasForeignKey(rt => rt.ReplacedByTokenId).OnDelete(DeleteBehavior.Restrict);
+                e.HasIndex(rt => rt.TokenHash).IsUnique();
+                e.HasIndex(rt => new { rt.PlayerId, rt.CreatedAtUtc });
+                e.HasIndex(rt => new { rt.PlayerId, rt.ExpiresAtUtc });
             });
         }
     }
