@@ -1,12 +1,14 @@
 ﻿using FruitCopyBackTest.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 
 namespace FruitCopyBackTest.Controllers
 {
     [ApiController]
-    [Route("api/players/{playerId}/save")]
+    [Route("api/players/save")]
     public class PlayerSaveController : ControllerBase
     {
         private readonly AppDbContext _db;
@@ -17,32 +19,42 @@ namespace FruitCopyBackTest.Controllers
 
         public record SaveUpsertRequest([Required] string SaveJson, int Version);
 
+        [Authorize]
         [HttpGet]
-        public async Task<IActionResult> Get([FromRoute] string playerId)
+        public async Task<IActionResult> Get()
         {
-            var save = await _db.PlayerSaves.AsNoTracking().FirstOrDefaultAsync(x => x.PlayerId == playerId);
+            var playerIdStr = User.FindFirstValue("player_id");
+            if (string.IsNullOrWhiteSpace(playerIdStr) || !Guid.TryParse(playerIdStr, out Guid playerId))
+                return Unauthorized(new { message = "UnAuthorized" });
 
-            if (save is null) return NotFound(new { message = "No save found for player.", playerId });
+            var save = await _db.PlayerSaves.AsNoTracking().FirstOrDefaultAsync(x => x.Id == playerId);
+
+            if (save is null) 
+                return NotFound(new { message = "No save found for player.", playerId });
 
             return Ok(new
             {
-                playerId = save.PlayerId,
                 saveJson = save.SaveJson,
                 version = save.Version,
                 updatedAtUrc = save.UpdatedAtUtc
             });
         }
 
+        [Authorize]
         [HttpPut]
-        public async Task<IActionResult> Put([FromRoute] string playerId, [FromBody] SaveUpsertRequest request)
+        public async Task<IActionResult> Put([FromBody] SaveUpsertRequest request)
         {
-            var save = await _db.PlayerSaves.FirstOrDefaultAsync(x => x.PlayerId == playerId);
+            var playerIdStr = User.FindFirstValue("player_id");
+            if (string.IsNullOrWhiteSpace(playerIdStr) || !Guid.TryParse(playerIdStr, out Guid playerId))
+                return Unauthorized(new { message = "UnAuthorized" });
+
+            var save = await _db.PlayerSaves.FirstOrDefaultAsync(x => x.Id== playerId);
 
             if (save is null)
             {
                 save = new()
                 {
-                    PlayerId = playerId,
+                    Id = playerId,
                     SaveJson = request.SaveJson,
                     Version = request.Version,
                     UpdatedAtUtc = DateTime.UtcNow
@@ -61,7 +73,6 @@ namespace FruitCopyBackTest.Controllers
             return Ok(new
             {
                 message = "Save Stored.",
-                playerId,
                 version = save.Version,
                 updatedAtUtc = save.UpdatedAtUtc
             });

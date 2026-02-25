@@ -5,8 +5,7 @@ namespace FruitCopyBackTest.Data
     public class PlayerSave
     {
         [Key]
-        [MaxLength(64)]
-        public string PlayerId { get; set; } = default!;
+        public Guid Id { get; set; }
 
         [Required]
         public string SaveJson { get; set; } = "{}";

@@ -3,6 +3,7 @@ using System;
 using FruitCopyBackTest.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FruitCopyBackTest.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260225173228_init")]
+    partial class init
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -24,9 +27,9 @@ namespace FruitCopyBackTest.Migrations
 
             modelBuilder.Entity("FruitCopyBackTest.Data.PlayerSave", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                    b.Property<string>("PlayerId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
                     b.Property<string>("SaveJson")
                         .IsRequired()
@@ -44,7 +47,7 @@ namespace FruitCopyBackTest.Migrations
                     b.Property<int>("Version")
                         .HasColumnType("integer");
 
-                    b.HasKey("Id");
+                    b.HasKey("PlayerId");
 
                     b.ToTable("PlayerSaves");
                 });
@@ -115,10 +118,6 @@ namespace FruitCopyBackTest.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("LoginKey")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
